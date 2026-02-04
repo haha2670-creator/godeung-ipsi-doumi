@@ -162,7 +162,12 @@ export function AcademicCalendarTab() {
           📅 연간 학사일정
         </h2>
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">학사일정을 불러오는 중...</p>
+          <p className="text-gray-500 mb-2">학사일정 데이터가 등록되지 않았습니다.</p>
+          <p className="text-sm text-gray-400">
+            {user.school}의 학사일정이 아직 등록되지 않았습니다.
+            <br />
+            추후 데이터가 추가되면 자동으로 표시됩니다.
+          </p>
         </div>
       </div>
     );

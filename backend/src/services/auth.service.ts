@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { hashPassword, comparePassword } from '../utils/password';
+import { validatePassword } from '../utils/passwordValidation';
 import { generateToken } from '../config/jwt';
 
 interface RegisterData {
@@ -24,6 +25,12 @@ export const register = async (data: RegisterData) => {
 
   if (existingUser) {
     throw new Error('이미 존재하는 이메일입니다.');
+  }
+
+  // 비밀번호 유효성 검사
+  const passwordValidation = validatePassword(data.password);
+  if (!passwordValidation.isValid) {
+    throw new Error(passwordValidation.errors.join(' '));
   }
 
   // 비밀번호 해싱

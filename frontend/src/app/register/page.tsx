@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
-import { UserPlus, Eye, EyeOff } from "lucide-react";
+import { UserPlus, Eye, EyeOff, Check, X } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,8 +20,40 @@ export default function RegisterPage() {
     track: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 비밀번호 유효성 검사
+  const passwordValidation = useMemo(() => {
+    const password = formData.password;
+    const checks = {
+      length: password.length >= 8,
+      hasLetter: /[a-zA-Z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      noSpace: !/\s/.test(password),
+    };
+    const isValid = Object.values(checks).every(Boolean);
+    return { ...checks, isValid };
+  }, [formData.password]);
+
+  // 비밀번호 강도 평가
+  const passwordStrength = useMemo(() => {
+    const password = formData.password;
+    if (password.length === 0) return null;
+    
+    let score = 0;
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+    if (/[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password)) score += 1;
+    if (/[0-9]/.test(password)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+
+    if (score <= 2) return { level: 'weak', label: '약함', color: 'bg-red-500' };
+    if (score <= 4) return { level: 'medium', label: '보통', color: 'bg-yellow-500' };
+    return { level: 'strong', label: '강함', color: 'bg-green-500' };
+  }, [formData.password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,8 +66,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("비밀번호는 6자 이상이어야 합니다.");
+    if (!passwordValidation.isValid) {
+      setError("비밀번호 규칙을 확인해주세요.");
       setLoading(false);
       return;
     }
@@ -87,10 +119,12 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  className="input pr-12"
+                  className={`input pr-12 ${
+                    formData.password && !passwordValidation.isValid ? "border-red-300" : ""
+                  }`}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="6자 이상"
+                  placeholder="8자 이상, 영문+숫자 조합"
                   required
                 />
                 <button
@@ -101,18 +135,118 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
+              
+              {/* 비밀번호 규칙 안내 */}
+              {formData.password && (
+                <div className="mt-2 space-y-1">
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.length ? (
+                      <Check size={14} className="text-green-500" />
+                    ) : (
+                      <X size={14} className="text-red-500" />
+                    )}
+                    <span className={passwordValidation.length ? "text-gray-600" : "text-red-500"}>
+                      8자 이상
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.hasLetter ? (
+                      <Check size={14} className="text-green-500" />
+                    ) : (
+                      <X size={14} className="text-red-500" />
+                    )}
+                    <span className={passwordValidation.hasLetter ? "text-gray-600" : "text-red-500"}>
+                      영문자 포함
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.hasNumber ? (
+                      <Check size={14} className="text-green-500" />
+                    ) : (
+                      <X size={14} className="text-red-500" />
+                    )}
+                    <span className={passwordValidation.hasNumber ? "text-gray-600" : "text-red-500"}>
+                      숫자 포함
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    {passwordValidation.noSpace ? (
+                      <Check size={14} className="text-green-500" />
+                    ) : (
+                      <X size={14} className="text-red-500" />
+                    )}
+                    <span className={passwordValidation.noSpace ? "text-gray-600" : "text-red-500"}>
+                      공백 없음
+                    </span>
+                  </div>
+                  
+                  {/* 비밀번호 강도 표시 */}
+                  {passwordStrength && (
+                    <div className="mt-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-gray-600">강도:</span>
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${passwordStrength.color} transition-all`}
+                            style={{
+                              width: passwordStrength.level === 'weak' ? '33%' : passwordStrength.level === 'medium' ? '66%' : '100%'
+                            }}
+                          />
+                        </div>
+                        <span className={`text-xs font-semibold ${
+                          passwordStrength.level === 'weak' ? 'text-red-500' :
+                          passwordStrength.level === 'medium' ? 'text-yellow-500' :
+                          'text-green-500'
+                        }`}>
+                          {passwordStrength.label}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="label">비밀번호 확인 *</label>
-              <input
-                type="password"
-                className="input"
-                value={formData.passwordConfirm}
-                onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })}
-                placeholder="비밀번호 다시 입력"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPasswordConfirm ? "text" : "password"}
+                  className={`input pr-12 ${
+                    formData.passwordConfirm && formData.password !== formData.passwordConfirm
+                      ? "border-red-300"
+                      : formData.passwordConfirm && formData.password === formData.passwordConfirm
+                      ? "border-green-300"
+                      : ""
+                  }`}
+                  value={formData.passwordConfirm}
+                  onChange={(e) => setFormData({ ...formData, passwordConfirm: e.target.value })}
+                  placeholder="비밀번호 다시 입력"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPasswordConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              {formData.passwordConfirm && (
+                <div className="mt-1">
+                  {formData.password === formData.passwordConfirm ? (
+                    <div className="flex items-center gap-1 text-xs text-green-600">
+                      <Check size={14} />
+                      <span>비밀번호가 일치합니다</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-xs text-red-500">
+                      <X size={14} />
+                      <span>비밀번호가 일치하지 않습니다</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
