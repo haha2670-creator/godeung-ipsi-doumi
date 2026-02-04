@@ -108,11 +108,19 @@ app.use(errorHandler);
 
 // 서버 시작
 app.listen(PORT, () => {
+  // Railway 또는 다른 플랫폼의 공개 도메인 확인
+  const publicDomain = process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RENDER_EXTERNAL_URL || process.env.FLY_APP_NAME 
+    ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || process.env.RENDER_EXTERNAL_URL || `${process.env.FLY_APP_NAME}.fly.dev`}`
+    : `http://localhost:${PORT}`;
+  
   console.log('');
   console.log('🚀 서버 시작!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📡 포트: ${PORT}`);
-  console.log(`🌐 URL: http://localhost:${PORT}`);
+  console.log(`🌐 로컬 URL: http://localhost:${PORT}`);
+  if (publicDomain !== `http://localhost:${PORT}`) {
+    console.log(`🌍 공개 URL: ${publicDomain}`);
+  }
   console.log(`🔧 환경: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔐 CORS: ${CORS_ORIGIN}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

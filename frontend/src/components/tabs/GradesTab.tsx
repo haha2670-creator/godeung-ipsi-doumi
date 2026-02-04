@@ -11,6 +11,7 @@ interface Grade {
   midterm?: number;
   final?: number;
   performance?: number;
+  finalGrade?: number; // 최종 등급 (1~9)
   achievementGrade?: string; // A, B, C, D, E
   rawScore?: number;
   memo?: string;

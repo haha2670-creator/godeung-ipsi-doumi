@@ -45,7 +45,7 @@ export function RoadmapTab() {
       const hash = window.location.hash;
       if (hash.startsWith('#roadmap-')) {
         const goalId = hash.replace('#roadmap-', '');
-        const goal = goals.find((g) => g.id === goalId);
+        const goal = goals.find((g: Goal) => g.id === goalId);
         if (goal) {
           setSelectedGoal(goal);
           loadRoadmap(goal.id);
@@ -67,7 +67,7 @@ export function RoadmapTab() {
         const hash = window.location.hash;
         if (hash.startsWith('#roadmap-')) {
           const goalId = hash.replace('#roadmap-', '');
-          const goal = res.data.find((g) => g.id === goalId);
+          const goal = res.data.find((g: Goal) => g.id === goalId);
           if (goal) {
             setSelectedGoal(goal);
             loadRoadmap(goal.id);
