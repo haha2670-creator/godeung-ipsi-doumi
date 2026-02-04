@@ -1,0 +1,12 @@
+export { ProfileTab } from './ProfileTab';
+export { GoalsTab } from './GoalsTab';
+export { RoadmapTab } from './RoadmapTab';
+export { GradesTab } from './GradesTab';
+export { MockExamTab } from './MockExamTab';
+export { RecordTab } from './RecordTab';
+export { ScheduleTab } from './ScheduleTab';
+export { AcademyTab } from './AcademyTab';
+export { ClubsTab } from './ClubsTab';
+export { SubjectsTab } from './SubjectsTab';
+export { AITab } from './AITab';
+export { AdmissionTypesTab } from './AdmissionTypesTab';

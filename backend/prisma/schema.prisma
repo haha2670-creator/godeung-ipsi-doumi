@@ -1,0 +1,219 @@
+// Prisma Schema for Admission Toolkit
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 모델
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  grade         String?  // 예비고1, 고1, 고2, 고3
+  school        String?  // 학교명
+  schoolType    String?  // 일반고, 자사고, 특목고 등
+  track         String?  // 자연, 인문, 예체능
+  role          String   @default("student") // student, teacher, parent
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  goals         Goal[]
+  grades        Grade[]
+  schedules     Schedule[]
+  clubs         Club[]
+  records       Record[]
+  mockExams     MockExam[]
+  academySchedules AcademySchedule[]
+  selectedSubjects SelectedSubject[]
+  
+  @@map("users")
+}
+
+// 목표 대학/학과
+model Goal {
+  id            String   @id @default(uuid())
+  userId        String
+  rank          Int      // 1~5지망
+  university    String
+  major         String
+  admissionType String   // 학생부종합, 학생부교과, 논술, 정시
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("goals")
+}
+
+// 성적 (지필/수행/등급)
+model Grade {
+  id              String   @id @default(uuid())
+  userId          String
+  semester        String   // 고1-1, 고1-2, 고2-1, 고2-2, 고3-1
+  subject         String
+  midterm         Float?   // 중간고사 점수
+  final           Float?   // 기말고사 점수
+  writtenRatio    Float?   // 지필 반영비율 (%)
+  performance     Float?   // 수행평가 점수
+  performanceRatio Float?  // 수행 반영비율 (%)
+  finalGrade      Int?     // 최종 등급 (1~9)
+  rawScore        Float?   // 원점수
+  memo            String?  // 메모 (등급컷 등)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("grades")
+}
+
+// 모의고사
+model MockExam {
+  id              String   @id @default(uuid())
+  userId          String
+  date            DateTime
+  type            String   // 3월 학평, 6월 평가원, 9월 평가원, 수능 등
+  koreanScore     Int?
+  koreanGrade     Int
+  mathScore       Int?
+  mathGrade       Int
+  englishScore    Int?
+  englishGrade    Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("mock_exams")
+}
+
+// 시험 일정
+model Schedule {
+  id              String   @id @default(uuid())
+  userId          String
+  type            String   // 수행평가, 지필평가, 모의고사, 기타
+  subject         String
+  name            String
+  date            DateTime
+  memo            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("schedules")
+}
+
+// 동아리
+model Club {
+  id              String   @id @default(uuid())
+  userId          String
+  name            String
+  category        String   // 학술, 과학, 인문, 예체능, 봉사, 기타
+  grade           String?  // 대상학년
+  activity        String?  // 활동 개요
+  location        String?  // 활동 장소
+  role            String?  // 역할 (부장, 부원 등)
+  period          String?  // 활동 기간
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  activities      ClubActivity[]
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("clubs")
+}
+
+// 동아리 활동 기록
+model ClubActivity {
+  id              String   @id @default(uuid())
+  clubId          String
+  date            DateTime
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  club            Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  
+  @@map("club_activities")
+}
+
+// 생기부 기록
+model Record {
+  id              String   @id @default(uuid())
+  userId          String
+  semester        String   // 고1-1, 고1-2, ...
+  category        String   // 세특, 독서, 수상, 봉사, 동아리, 기타
+  title           String
+  content         String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("records")
+}
+
+// 학원 스케줄
+model AcademySchedule {
+  id              String   @id @default(uuid())
+  userId          String
+  academyName     String
+  subject         String
+  dayOfWeek       String   // 월, 화, 수, 목, 금, 토, 일
+  startTime       String   // HH:mm 형식
+  endTime         String   // HH:mm 형식
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("academy_schedules")
+}
+
+// 선택과목
+model SelectedSubject {
+  id              String   @id @default(uuid())
+  userId          String
+  grade           String   // 2 (고2), 3 (고3)
+  subjects        String[] // 선택한 과목 목록
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, grade])
+  @@map("selected_subjects")
+}
+
+// 학교 정보 (감일고 등)
+model School {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  region          String
+  type            String   // 일반고, 자사고, 특목고 등
+  clubs           Json?    // 동아리 목록 (JSON)
+  subjects        Json?    // 선택과목 목록 (JSON)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("schools")
+}
+
+// 대학 정보
+model University {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  majors          Json     // 학과 목록 및 입시 정보 (JSON)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("universities")
+}
