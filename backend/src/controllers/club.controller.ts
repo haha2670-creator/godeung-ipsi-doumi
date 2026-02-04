@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as clubService from '../services/club.service';
 
-export const createClub = async (req: AuthRequest, res: Response) => {
+export const createClub = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
 
@@ -11,91 +11,91 @@ export const createClub = async (req: AuthRequest, res: Response) => {
       ...req.body,
     });
 
-    res.status(201).json(club);
+    return res.status(201).json(club);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const getClubs = async (req: AuthRequest, res: Response) => {
+export const getClubs = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
 
     const clubs = await clubService.getClubs(req.user.userId);
-    res.status(200).json(clubs);
+    return res.status(200).json(clubs);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const updateClub = async (req: AuthRequest, res: Response) => {
+export const updateClub = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     await clubService.updateClub(id, req.user.userId, req.body);
 
-    res.status(200).json({ message: '동아리가 수정되었습니다.' });
+    return res.status(200).json({ message: '동아리가 수정되었습니다.' });
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const deleteClub = async (req: AuthRequest, res: Response) => {
+export const deleteClub = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
 
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     await clubService.deleteClub(id, req.user.userId);
 
-    res.status(200).json({ message: '동아리가 삭제되었습니다.' });
+    return res.status(200).json({ message: '동아리가 삭제되었습니다.' });
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const createActivity = async (req: AuthRequest, res: Response) => {
+export const createActivity = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     const activity = await clubService.createClubActivity({
       ...req.body,
       date: new Date(req.body.date),
     });
 
-    res.status(201).json(activity);
+    return res.status(201).json(activity);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const getActivities = async (req: AuthRequest, res: Response) => {
+export const getActivities = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
-    const { clubId } = req.params;
+    const clubId = Array.isArray(req.params.clubId) ? req.params.clubId[0] : req.params.clubId;
     const activities = await clubService.getClubActivities(clubId);
 
-    res.status(200).json(activities);
+    return res.status(200).json(activities);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const deleteActivity = async (req: AuthRequest, res: Response) => {
+export const deleteActivity = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
-    const { id } = req.params;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     await clubService.deleteClubActivity(id);
 
-    res.status(200).json({ message: '활동이 삭제되었습니다.' });
+    return res.status(200).json({ message: '활동이 삭제되었습니다.' });
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const getSchoolClubs = async (req: AuthRequest, res: Response) => {
+export const getSchoolClubs = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
-    const { schoolName } = req.params;
+    const schoolName = Array.isArray(req.params.schoolName) ? req.params.schoolName[0] : req.params.schoolName;
     const clubs = await clubService.getSchoolClubs(schoolName);
 
-    res.status(200).json(clubs);
+    return res.status(200).json(clubs);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
