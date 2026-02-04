@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
 import { AuthRequest } from '../middleware/auth';
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email, password, name, grade, school, track } = req.body;
 
@@ -19,13 +19,13 @@ export const register = async (req: Request, res: Response) => {
       track,
     });
 
-    res.status(201).json(result);
+    return res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email, password } = req.body;
 
@@ -35,13 +35,13 @@ export const login = async (req: Request, res: Response) => {
 
     const result = await authService.login({ email, password });
 
-    res.status(200).json(result);
+    return res.status(200).json(result);
   } catch (error) {
-    res.status(401).json({ error: (error as Error).message });
+    return res.status(401).json({ error: (error as Error).message });
   }
 };
 
-export const getProfile = async (req: AuthRequest, res: Response) => {
+export const getProfile = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: '인증이 필요합니다.' });
@@ -49,13 +49,13 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
 
     const profile = await authService.getProfile(req.user.userId);
 
-    res.status(200).json(profile);
+    return res.status(200).json(profile);
   } catch (error) {
-    res.status(404).json({ error: (error as Error).message });
+    return res.status(404).json({ error: (error as Error).message });
   }
 };
 
-export const updateProfile = async (req: AuthRequest, res: Response) => {
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<Response | void> => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: '인증이 필요합니다.' });
@@ -70,8 +70,8 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
       track,
     });
 
-    res.status(200).json(updatedProfile);
+    return res.status(200).json(updatedProfile);
   } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
+    return res.status(400).json({ error: (error as Error).message });
   }
 };
