@@ -4,12 +4,12 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticate as any);
 
-router.post('/', goalController.createGoal);
-router.get('/', goalController.getGoals);
-router.get('/:id/roadmap', goalController.getRoadmap);
-router.put('/:id', goalController.updateGoal);
-router.delete('/:id', goalController.deleteGoal);
+router.post('/', goalController.createGoal as any);
+router.get('/', goalController.getGoals as any);
+router.get('/:id/roadmap', goalController.getRoadmap as any);
+router.put('/:id', goalController.updateGoal as any);
+router.delete('/:id', goalController.deleteGoal as any);
 
 export default router;

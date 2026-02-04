@@ -2,13 +2,18 @@ import { Request, Response } from 'express';
 import * as dataService from '../services/data.service';
 import * as publicDataService from '../services/publicData.service';
 
-export const getSchool = async (req: Request, res: Response) => {
+export const getSchool = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name } = req.params;
+    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
+    if (!name) {
+      res.status(400).json({ error: '학교명이 필요합니다.' });
+      return;
+    }
     const school = await dataService.getSchool(name);
 
     if (!school) {
-      return res.status(404).json({ error: '학교를 찾을 수 없습니다.' });
+      res.status(404).json({ error: '학교를 찾을 수 없습니다.' });
+      return;
     }
 
     res.status(200).json(school);
@@ -17,7 +22,7 @@ export const getSchool = async (req: Request, res: Response) => {
   }
 };
 
-export const getSchools = async (req: Request, res: Response) => {
+export const getSchools = async (_req: Request, res: Response): Promise<void> => {
   try {
     const schools = await dataService.getSchools();
     res.status(200).json(schools);
@@ -26,13 +31,18 @@ export const getSchools = async (req: Request, res: Response) => {
   }
 };
 
-export const getUniversity = async (req: Request, res: Response) => {
+export const getUniversity = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name } = req.params;
+    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
+    if (!name) {
+      res.status(400).json({ error: '대학명이 필요합니다.' });
+      return;
+    }
     const university = await dataService.getUniversity(name);
 
     if (!university) {
-      return res.status(404).json({ error: '대학을 찾을 수 없습니다.' });
+      res.status(404).json({ error: '대학을 찾을 수 없습니다.' });
+      return;
     }
 
     res.status(200).json(university);
@@ -41,7 +51,7 @@ export const getUniversity = async (req: Request, res: Response) => {
   }
 };
 
-export const getUniversities = async (req: Request, res: Response) => {
+export const getUniversities = async (_req: Request, res: Response): Promise<void> => {
   try {
     const universities = await dataService.getUniversities();
     res.status(200).json(universities);
@@ -50,13 +60,18 @@ export const getUniversities = async (req: Request, res: Response) => {
   }
 };
 
-export const getUniversityMajors = async (req: Request, res: Response) => {
+export const getUniversityMajors = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name } = req.params;
+    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
+    if (!name) {
+      res.status(400).json({ error: '대학명이 필요합니다.' });
+      return;
+    }
     const majors = await dataService.getUniversityMajors(name);
 
     if (!majors) {
-      return res.status(404).json({ error: '대학 정보를 찾을 수 없습니다.' });
+      res.status(404).json({ error: '학과 정보를 찾을 수 없습니다.' });
+      return;
     }
 
     res.status(200).json(majors);
@@ -65,8 +80,8 @@ export const getUniversityMajors = async (req: Request, res: Response) => {
   }
 };
 
-// 공공데이터 API - 대학 통계 (경쟁률 등)
-export const getPublicDataStatus = async (_req: Request, res: Response) => {
+// 공공?�이??API - ?�???�계 (경쟁�???
+export const getPublicDataStatus = async (_req: Request, res: Response): Promise<void> => {
   try {
     const enabled = publicDataService.isPublicDataEnabled();
     res.status(200).json({ enabled });
@@ -75,19 +90,21 @@ export const getPublicDataStatus = async (_req: Request, res: Response) => {
   }
 };
 
-export const getUniversityStatsFromPublic = async (req: Request, res: Response) => {
+export const getUniversityStatsFromPublic = async (req: Request, res: Response): Promise<void> => {
   try {
-    const name = Array.isArray(req.params.name) ? req.params.name[0] : req.params.name;
+    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
     if (!name) {
-      return res.status(400).json({ error: '대학명이 필요합니다.' });
+      res.status(400).json({ error: '대학명이 필요합니다.' });
+      return;
     }
 
     const stats = await publicDataService.getUniversityStatsByName(name);
     if (!stats) {
-      return res.status(404).json({
+      res.status(404).json({
         error: '공공데이터에서 해당 대학 정보를 찾을 수 없습니다.',
-        hint: 'DATA_GO_KR_SERVICE_KEY 설정 및 공공데이터포털 활용신청을 확인하세요.',
+        hint: 'DATA_GO_KR_SERVICE_KEY 설정 및 공공데이터포털 이용신청 확인하세요',
       });
+      return;
     }
 
     res.status(200).json(stats);

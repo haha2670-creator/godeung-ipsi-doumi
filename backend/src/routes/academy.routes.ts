@@ -4,11 +4,11 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticate as any);
 
-router.post('/', academyController.create);
-router.get('/', academyController.list);
-router.put('/:id', academyController.update);
-router.delete('/:id', academyController.remove);
+router.post('/', academyController.create as any);
+router.get('/', academyController.list as any);
+router.put('/:id', academyController.update as any);
+router.delete('/:id', academyController.remove as any);
 
 export default router;

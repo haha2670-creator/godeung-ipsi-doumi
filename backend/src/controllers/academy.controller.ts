@@ -2,13 +2,17 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as academyService from '../services/academy.service';
 
-export const create = async (req: AuthRequest, res: Response): Promise<Response | void> => {
+export const create = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const { academyName, subject, dayOfWeek, startTime, endTime } = req.body;
     if (!academyName || !subject || !dayOfWeek || !startTime || !endTime) {
-      return res.status(400).json({ error: '학원명, 과목, 요일, 시작/종료 시간이 필요합니다.' });
+      res.status(400).json({ error: '???, ??, ??/??? ?????.' });
+      return;
     }
 
     const schedule = await academyService.createAcademySchedule({
@@ -20,43 +24,52 @@ export const create = async (req: AuthRequest, res: Response): Promise<Response 
       endTime,
     });
 
-    return res.status(201).json(schedule);
+    res.status(201).json(schedule);
   } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
+    res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const list = async (req: AuthRequest, res: Response): Promise<Response | void> => {
+export const list = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const schedules = await academyService.getAcademySchedules(req.user.userId);
-    return res.status(200).json(schedules);
+    res.status(200).json(schedules);
   } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
+    res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const update = async (req: AuthRequest, res: Response): Promise<Response | void> => {
+export const update = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
     await academyService.updateAcademySchedule(id, req.user.userId, req.body);
-    return res.status(200).json({ message: '학원 스케줄이 수정되었습니다.' });
+    res.status(200).json({ message: '?? ??? ?????????.' });
   } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
+    res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const remove = async (req: AuthRequest, res: Response): Promise<Response | void> => {
+export const remove = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
     await academyService.deleteAcademySchedule(id, req.user.userId);
-    return res.status(200).json({ message: '학원 스케줄이 삭제되었습니다.' });
+    res.status(200).json({ message: '?? ??? ???????.' });
   } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
+    res.status(400).json({ error: (error as Error).message });
   }
 };

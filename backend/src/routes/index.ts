@@ -14,7 +14,7 @@ import subjectsRoutes from './subjects.routes';
 const router = Router();
 
 // 헬스 체크
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.json({ status: 'OK', message: '서버가 정상 작동 중입니다.' });
 });
 

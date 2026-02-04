@@ -5,7 +5,6 @@
  */
 
 import http from 'http';
-import https from 'https';
 import { XMLParser } from 'fast-xml-parser';
 
 // 공공데이터 대학알리미 API (2개 서비스)

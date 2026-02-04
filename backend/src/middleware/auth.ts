@@ -12,7 +12,7 @@ export const authenticate = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Response | void => {
   try {
     const authHeader = req.headers.authorization;
 

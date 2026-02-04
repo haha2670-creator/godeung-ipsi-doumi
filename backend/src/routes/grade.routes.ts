@@ -4,12 +4,12 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticate as any);
 
-router.post('/', gradeController.createGrade);
-router.get('/', gradeController.getGrades);
-router.get('/average', gradeController.getAverageGrade);
-router.put('/:id', gradeController.updateGrade);
-router.delete('/:id', gradeController.deleteGrade);
+router.post('/', gradeController.createGrade as any);
+router.get('/', gradeController.getGrades as any);
+router.get('/average', gradeController.getAverageGrade as any);
+router.put('/:id', gradeController.updateGrade as any);
+router.delete('/:id', gradeController.deleteGrade as any);
 
 export default router;

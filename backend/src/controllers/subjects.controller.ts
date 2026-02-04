@@ -2,14 +2,18 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as subjectsService from '../services/subjects.service';
 
-export const saveSelectedSubjects = async (req: AuthRequest, res: Response) => {
+export const saveSelectedSubjects = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const { grade, subjects } = req.body;
 
     if (!grade || !subjects || !Array.isArray(subjects)) {
-      return res.status(400).json({ error: '학년과 과목 목록이 필요합니다.' });
+      res.status(400).json({ error: '??? ??? ?????.' });
+      return;
     }
 
     const result = await subjectsService.saveSelectedSubjects({
@@ -24,9 +28,12 @@ export const saveSelectedSubjects = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getSelectedSubjects = async (req: AuthRequest, res: Response) => {
+export const getSelectedSubjects = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const { grade } = req.query;
 
@@ -35,7 +42,8 @@ export const getSelectedSubjects = async (req: AuthRequest, res: Response) => {
         req.user.userId,
         grade as string
       );
-      return res.status(200).json(result);
+      res.status(200).json(result);
+      return;
     }
 
     const results = await subjectsService.getSelectedSubjects(req.user.userId);
@@ -45,14 +53,19 @@ export const getSelectedSubjects = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getSchoolSubjects = async (req: AuthRequest, res: Response) => {
+export const getSchoolSubjects = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { schoolName } = req.params;
+    const schoolName = (Array.isArray(req.params.schoolName) ? req.params.schoolName[0] : req.params.schoolName) as string;
+    if (!schoolName) {
+      res.status(400).json({ error: '???? ?????.' });
+      return;
+    }
 
     const subjects = await subjectsService.getSchoolSubjects(schoolName);
 
     if (!subjects) {
-      return res.status(404).json({ error: '학교 정보를 찾을 수 없습니다.' });
+      res.status(404).json({ error: '?? ??? ??? ?? ? ????.' });
+      return;
     }
 
     res.status(200).json(subjects);

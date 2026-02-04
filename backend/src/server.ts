@@ -19,7 +19,7 @@ app.use(express.json()); // JSON 파싱
 app.use(express.urlencoded({ extended: true })); // URL 인코딩 파싱
 
 // 로그 미들웨어
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
   next();
 });
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 app.use('/api', routes);
 
 // 루트 경로
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     message: '🎓 고등학생 입시 올인원 툴킷 API 서버',
     version: '2.0.0',

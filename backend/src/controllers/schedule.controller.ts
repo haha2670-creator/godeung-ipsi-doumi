@@ -2,9 +2,12 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as scheduleService from '../services/schedule.service';
 
-export const createSchedule = async (req: AuthRequest, res: Response) => {
+export const createSchedule = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const schedule = await scheduleService.createSchedule({
       userId: req.user.userId,
@@ -18,9 +21,12 @@ export const createSchedule = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getSchedules = async (req: AuthRequest, res: Response) => {
+export const getSchedules = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const { type, year, month } = req.query;
 
@@ -41,35 +47,44 @@ export const getSchedules = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateSchedule = async (req: AuthRequest, res: Response) => {
+export const updateSchedule = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
-    const { id } = req.params;
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
     await scheduleService.updateSchedule(id, req.user.userId, req.body);
 
-    res.status(200).json({ message: '일정이 수정되었습니다.' });
+    res.status(200).json({ message: '??? ?????????.' });
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const deleteSchedule = async (req: AuthRequest, res: Response) => {
+export const deleteSchedule = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
-    const { id } = req.params;
+    const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
     await scheduleService.deleteSchedule(id, req.user.userId);
 
-    res.status(200).json({ message: '일정이 삭제되었습니다.' });
+    res.status(200).json({ message: '??? ???????.' });
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
   }
 };
 
-export const getUpcoming = async (req: AuthRequest, res: Response) => {
+export const getUpcoming = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    if (!req.user) return res.status(401).json({ error: '인증이 필요합니다.' });
+    if (!req.user) {
+      res.status(401).json({ error: '??? ?????.' });
+      return;
+    }
 
     const { days } = req.query;
     const schedules = await scheduleService.getUpcomingSchedules(
