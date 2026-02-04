@@ -7,6 +7,20 @@ export const getSchool = async (schoolName: string) => {
   });
 };
 
+// 학교 학사일정 조회
+export const getSchoolCalendar = async (schoolName: string) => {
+  const school = await prisma.school.findUnique({
+    where: { name: schoolName },
+    select: { academicCalendar: true },
+  });
+
+  if (!school || !school.academicCalendar) {
+    return null;
+  }
+
+  return school.academicCalendar;
+};
+
 // 학교 목록 조회
 export const getSchools = async () => {
   return prisma.school.findMany({

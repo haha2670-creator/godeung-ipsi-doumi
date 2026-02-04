@@ -129,6 +129,7 @@ export const clubsApi = {
 export const dataApi = {
   schools: () => api.get('/data/schools'),
   school: (name: string) => api.get(`/data/schools/${encodeURIComponent(name)}`),
+  schoolCalendar: (name: string) => api.get(`/data/schools/${encodeURIComponent(name)}/calendar`),
   universities: () => api.get('/data/universities'),
   university: (name: string) => api.get(`/data/universities/${encodeURIComponent(name)}`),
   universityMajors: (name: string) => api.get(`/data/universities/${encodeURIComponent(name)}/majors`),

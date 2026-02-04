@@ -6,6 +6,7 @@ const router = Router();
 // 학교 정보
 router.get('/schools', dataController.getSchools as any);
 router.get('/schools/:name', dataController.getSchool as any);
+router.get('/schools/:name/calendar', dataController.getSchoolCalendar as any);
 
 // 대학 정보
 router.get('/universities', dataController.getUniversities as any);

@@ -13,6 +13,7 @@ const tabs = [
   { id: "mock", label: "📝 모의고사", icon: "📝" },
   { id: "record", label: "📖 생기부", icon: "📖" },
   { id: "schedule", label: "📅 시험일정", icon: "📅" },
+  { id: "academic-calendar", label: "📆 학사일정", icon: "📆" },
   { id: "academy", label: "🏫 학원", icon: "🏫" },
   { id: "clubs", label: "🎭 동아리", icon: "🎭" },
   { id: "ai", label: "🤖 AI도우미", icon: "🤖" },

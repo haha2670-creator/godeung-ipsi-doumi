@@ -10,3 +10,4 @@ export { ClubsTab } from './ClubsTab';
 export { SubjectsTab } from './SubjectsTab';
 export { AITab } from './AITab';
 export { AdmissionTypesTab } from './AdmissionTypesTab';
+export { AcademicCalendarTab } from './AcademicCalendarTab';

@@ -14,6 +14,7 @@ import {
   MockExamTab,
   RecordTab,
   ScheduleTab,
+  AcademicCalendarTab,
   AcademyTab,
   ClubsTab,
   AITab,
@@ -53,6 +54,8 @@ export default function DashboardPage() {
         return <RecordTab />;
       case "schedule":
         return <ScheduleTab />;
+      case "academic-calendar":
+        return <AcademicCalendarTab />;
       case "academy":
         return <AcademyTab />;
       case "clubs":

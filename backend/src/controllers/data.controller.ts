@@ -22,6 +22,26 @@ export const getSchool = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const getSchoolCalendar = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
+    if (!name) {
+      res.status(400).json({ error: '학교명이 필요합니다.' });
+      return;
+    }
+    const calendar = await dataService.getSchoolCalendar(name);
+
+    if (!calendar) {
+      res.status(404).json({ error: '학사일정을 찾을 수 없습니다.' });
+      return;
+    }
+
+    res.status(200).json(calendar);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+  }
+};
+
 export const getSchools = async (_req: Request, res: Response): Promise<void> => {
   try {
     const schools = await dataService.getSchools();

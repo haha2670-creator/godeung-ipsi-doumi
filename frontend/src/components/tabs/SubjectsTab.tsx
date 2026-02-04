@@ -293,12 +293,47 @@ export function SubjectsTab() {
         ) : (
           <div>
             <h3 className="font-bold text-gray-800 mb-4">{semesterLabel} 선택과목</h3>
-            {Object.entries(gradeSubjects).map(([category, subjectList]) => {
+            {Object.entries(gradeSubjects).map(([category, subjectData]) => {
               const match = category.match(/\(택(\d+)\)/);
               const selectCount = match ? parseInt(match[1], 10) : null;
-              const selectedInCategory = (subjectList as string[]).filter((s) => selectedSubjects.includes(s)).length;
+              
+              // 카테고리 구조 확인 (일반선택/진로선택/융합선택 구분 여부)
+              const hasCategoryStructure = subjectData && typeof subjectData === 'object' && 
+                ('일반선택' in subjectData || '진로선택' in subjectData || '융합선택' in subjectData);
+              
+              // 카테고리별 과목 추출
+              let allSubjects: string[] = [];
+              let categoryMap: Record<string, string[]> = {};
+              
+              if (hasCategoryStructure) {
+                const catData = subjectData as { 일반선택?: string[]; 진로선택?: string[]; 융합선택?: string[] };
+                categoryMap = {
+                  '일반선택': catData.일반선택 || [],
+                  '진로선택': catData.진로선택 || [],
+                  '융합선택': catData.융합선택 || []
+                };
+                allSubjects = [
+                  ...(catData.일반선택 || []),
+                  ...(catData.진로선택 || []),
+                  ...(catData.융합선택 || [])
+                ];
+              } else {
+                allSubjects = subjectData as string[];
+              }
+              
+              const selectedInCategory = allSubjects.filter((s) => selectedSubjects.includes(s)).length;
+              
+              const getCategoryColor = (cat: string) => {
+                switch (cat) {
+                  case '일반선택': return 'bg-blue-100 text-blue-700 border-blue-300';
+                  case '진로선택': return 'bg-purple-100 text-purple-700 border-purple-300';
+                  case '융합선택': return 'bg-green-100 text-green-700 border-green-300';
+                  default: return 'bg-gray-100 text-gray-700 border-gray-300';
+                }
+              };
+              
               return (
-                <div key={category} className="border border-gray-100 rounded-xl p-4 bg-gray-50/50">
+                <div key={category} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 mb-4">
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <h4 className="font-bold text-gray-700 flex items-center gap-2">
                       <span className="w-2 h-2 bg-primary-500 rounded-full"></span>
@@ -313,24 +348,60 @@ export function SubjectsTab() {
                     )}
                   </div>
                   {selectCount !== null && (
-                    <p className="text-xs text-gray-500 mb-2">※ 이 중 {selectCount}개를 선택하세요.</p>
+                    <p className="text-xs text-gray-500 mb-3">※ 이 중 {selectCount}개를 선택하세요.</p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {(subjectList as string[]).map((subject) => (
-                      <button
-                        key={subject}
-                        onClick={() => handleSubjectToggle(subject)}
-                        className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
-                          selectedSubjects.includes(subject)
-                            ? "bg-primary-500 text-white"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {selectedSubjects.includes(subject) && <Check size={16} />}
-                        {subject}
-                      </button>
-                    ))}
-                  </div>
+                  
+                  {/* 카테고리별로 구분하여 표시 */}
+                  {hasCategoryStructure ? (
+                    <div className="space-y-4">
+                      {Object.entries(categoryMap).map(([catName, subjects]) => {
+                        if (subjects.length === 0) return null;
+                        return (
+                          <div key={catName} className="border-l-4 pl-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getCategoryColor(catName)}`}>
+                                {catName}
+                              </span>
+                              <span className="text-xs text-gray-500">({subjects.length}개)</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {subjects.map((subject) => (
+                                <button
+                                  key={subject}
+                                  onClick={() => handleSubjectToggle(subject)}
+                                  className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-2 text-sm ${
+                                    selectedSubjects.includes(subject)
+                                      ? "bg-primary-500 text-white"
+                                      : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                                  }`}
+                                >
+                                  {selectedSubjects.includes(subject) && <Check size={14} />}
+                                  {subject}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {allSubjects.map((subject) => (
+                        <button
+                          key={subject}
+                          onClick={() => handleSubjectToggle(subject)}
+                          className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+                            selectedSubjects.includes(subject)
+                              ? "bg-primary-500 text-white"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          }`}
+                        >
+                          {selectedSubjects.includes(subject) && <Check size={16} />}
+                          {subject}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}

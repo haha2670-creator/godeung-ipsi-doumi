@@ -201,6 +201,7 @@ model School {
   type            String   // 일반고, 자사고, 특목고 등
   clubs           Json?    // 동아리 목록 (JSON)
   subjects        Json?    // 선택과목 목록 (JSON)
+  academicCalendar Json?  // 연간 학사일정 (JSON)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   
