@@ -156,7 +156,7 @@ export function GoalsTab() {
               <div className="mt-2 flex items-center gap-2">
                 {universityStats[goal.university] ? (
                   <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">
-                    {universityStats[goal.university].year}년 정원내 신입생 경쟁률: {universityStats[goal.university].competitionRate}
+                    {universityStats[goal.university].year}년 학교(전체) 정원내 신입생 경쟁률: {universityStats[goal.university].competitionRate}
                   </span>
                 ) : publicDataEnabled ? (
                   <button
@@ -168,14 +168,14 @@ export function GoalsTab() {
                     {statsLoading[goal.university] ? "조회 중..." : (
                       <>
                         <BarChart3 size={12} />
-                        공공데이터 경쟁률 조회
+                        공공데이터 학교 경쟁률 조회
                       </>
                     )}
                   </button>
                 ) : (
                   <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded" title="백엔드 .env에 DATA_GO_KR_SERVICE_KEY 설정">
                     <BarChart3 size={12} className="inline mr-1" />
-                    경쟁률 조회 (API 키 설정 필요)
+                    학교 경쟁률 조회 (API 키 설정 필요)
                   </span>
                 )}
               </div>
@@ -214,7 +214,7 @@ export function GoalsTab() {
             <ExternalLink size={16} />
             {publicDataEnabled ? (
               <>
-                <strong>공공데이터 연동됨:</strong> 각 목표 카드의 &quot;경쟁률 조회&quot; 버튼을 눌러 정원내 신입생 경쟁률을 확인하세요.
+                <strong>공공데이터 연동됨:</strong> 각 목표 카드의 &quot;경쟁률 조회&quot; 버튼을 눌러 학교(전체) 정원내 신입생 경쟁률을 확인하세요. (학과별이 아닌 학교 단위 수치입니다.)
               </>
             ) : (
               <>

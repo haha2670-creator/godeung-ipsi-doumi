@@ -1,15 +1,18 @@
 /**
  * 공공데이터포털(data.go.kr) - 한국대학교육협의회 대학알리미 API 연동
- * 활용신청: https://www.data.go.kr/data/15037507/openapi.do (대학기본정보)
- *         https://www.data.go.kr/data/15037346/openapi.do (학생현황)
+ * 활용신청: https://www.data.go.kr/data/15037507/openapi.do (대학기본정보 - 대학 코드조회)
+ *         https://www.data.go.kr/data/15037346/openapi.do (학생현황 - 정원내 신입생 경쟁률)
+ *
+ * schlId(학교코드): [대학정보공시 > 대학 코드조회 API]로 확인 가능.
+ * 경쟁률 API(StudentService)는 schlId 7자리 형식(예: 0000035)을 사용합니다.
  */
 
 import http from 'http';
 import { XMLParser } from 'fast-xml-parser';
 
-// 공공데이터 대학알리미 API (2개 서비스)
-// - BasicInformationService: 대학 목록 등
-// - StudentService: 정원내 신입생 경쟁률 등
+// 공공데이터 대학알리미 API
+// - BasicInformationService/getUniversityCode: 대학 코드조회 (대학 검색목록)
+// - StudentService/getComparisonInsideFixedNumberFreshmanCompetitionRate: 정원내 신입생 경쟁률
 const BASE_URL = 'http://openapi.academyinfo.go.kr/openapi/service/rest';
 const parser = new XMLParser({ ignoreAttributes: false });
 
@@ -78,7 +81,9 @@ async function callApi<T>(path: string, params: Record<string, string | number> 
     const resultCode =
       header?.resultCode ?? header?.ResultCode ?? header?.resultcode ?? body?.resultCode ?? body?.ResultCode ?? body?.resultcode ?? response?.resultCode ?? response?.ResultCode;
 
-    if (resultCode !== '00') {
+    // 성공: '00', '0', 0 (공공데이터 API가 숫자 0 또는 문자열로 반환)
+    const isSuccess = resultCode === '00' || resultCode === '0' || resultCode === 0;
+    if (!isSuccess) {
       const msg = header?.resultMsg ?? header?.ResultMsg ?? body?.resultMsg ?? body?.ResultMsg ?? '알 수 없음';
       console.warn('[공공데이터 API] resultCode:', resultCode ?? 'undefined', 'msg:', msg, '| path:', path);
       // 디버그: 파싱 구조 확인 (환경변수 DEBUG_PUBLIC_DATA=1 일 때)
@@ -127,6 +132,8 @@ interface CompetitionRateResponse {
   totalCount?: number;
   items?: { item?: CompetitionRateItem | CompetitionRateItem[] };
   Items?: { item?: CompetitionRateItem | CompetitionRateItem[]; Item?: CompetitionRateItem | CompetitionRateItem[] };
+  item?: CompetitionRateItem | CompetitionRateItem[];
+  Item?: CompetitionRateItem | CompetitionRateItem[];
 }
 
 /** API 키 설정 여부 */
@@ -180,10 +187,18 @@ export async function findSchoolIdByName(universityName: string): Promise<string
     const found = list.find(
       (x) => x.name === universityName || x.name.replace(/\s/g, '') === universityName.replace(/\s/g, '')
     );
-    if (found?.id) return found.id;
+    if (found?.id) {
+      console.log('[공공데이터] 대학코드 조회(API):', universityName, '->', found.id);
+      return found.id;
+    }
   }
-  // API 실패 시 폴백
-  return SCHL_ID_FALLBACK[universityName] ?? null;
+  const fallback = SCHL_ID_FALLBACK[universityName] ?? null;
+  if (fallback) {
+    console.log('[공공데이터] 대학코드 조회(폴백):', universityName, '->', fallback);
+  } else {
+    console.log('[공공데이터] 대학코드 없음:', universityName);
+  }
+  return fallback;
 }
 
 /**
@@ -199,9 +214,49 @@ export async function getFreshmanCompetitionRate(schlId: string, svyYr: string =
     'StudentService/getComparisonInsideFixedNumberFreshmanCompetitionRate',
     { schlId, svyYr }
   );
-  const items = body?.items ?? (body as { Items?: { item?: CompetitionRateItem | CompetitionRateItem[] } })?.Items;
-  const rawItem = items?.item;
-  if (!rawItem) return null;
+  if (!body) {
+    console.log('[공공데이터] 경쟁률 API body 없음, schlId:', schlId);
+    return null;
+  }
+  // 응답 구조: body.items.item | body.items (배열) | body.items 내부가 다른 키명(item/Item 등)
+  const items = body?.items ?? (body as { Items?: unknown })?.Items;
+  let rawItem: CompetitionRateItem | CompetitionRateItem[] | undefined =
+    (items as { item?: CompetitionRateItem | CompetitionRateItem[] })?.item ??
+    (items as { Item?: CompetitionRateItem | CompetitionRateItem[] })?.Item;
+  if (!rawItem && body) {
+    rawItem = (body as CompetitionRateResponse).item ?? (body as CompetitionRateResponse).Item;
+  }
+  if (!rawItem && Array.isArray(items)) {
+    rawItem = items.length > 0 ? (items[0] as CompetitionRateItem) : undefined;
+  }
+  // body.items가 객체인데 item/Item 외 다른 키명인 경우
+  if (!rawItem && items && typeof items === 'object' && !Array.isArray(items)) {
+    const inner = items as Record<string, unknown>;
+    const keys = Object.keys(inner);
+    const itemKey = keys.find((k) => k.toLowerCase() === 'item');
+    if (itemKey) {
+      const val = inner[itemKey];
+      rawItem = Array.isArray(val) ? (val.length > 0 ? (val[0] as CompetitionRateItem) : undefined) : (val as CompetitionRateItem);
+    }
+    // item 키가 없으면 값 중 배열/객체인 것의 첫 항목 사용 (공공데이터 XML 파싱 차이 대응)
+    if (!rawItem) {
+      for (const k of keys) {
+        const val = inner[k];
+        if (Array.isArray(val) && val.length > 0 && val[0] && typeof val[0] === 'object') {
+          rawItem = val[0] as CompetitionRateItem;
+          break;
+        }
+        if (val && typeof val === 'object' && !Array.isArray(val) && ((val as CompetitionRateItem).schlKrnNm != null || (val as CompetitionRateItem).indctVal1 != null)) {
+          rawItem = val as CompetitionRateItem;
+          break;
+        }
+      }
+    }
+  }
+  if (!rawItem) {
+    console.log('[공공데이터] 경쟁률 item 없음, body 키:', Object.keys(body || {}).join(', '), 'items 키:', items && typeof items === 'object' ? Object.keys(items as object).join(', ') : 'n/a');
+    return null;
+  }
 
   const first: CompetitionRateItem = Array.isArray(rawItem) ? rawItem[0] : rawItem;
   const universityName = first?.schlKrnNm ?? first?.schlKRNNM;
@@ -215,22 +270,57 @@ export async function getFreshmanCompetitionRate(schlId: string, svyYr: string =
 }
 
 /**
+ * schlId를 7자리 형식으로 맞춤 (경쟁률 API는 7자리 사용, 예: 0000035)
+ * API/폴백에서 숫자로 올 수 있으므로 문자열로 변환 후 처리.
+ */
+function normalizeSchlId(schlId: string | number): string {
+  const s = typeof schlId === 'string' ? schlId : String(schlId);
+  const n = s.replace(/\D/g, '');
+  if (n.length >= 7) return n.slice(0, 7);
+  return n.padStart(7, '0');
+}
+
+/** 경쟁률 조회 시 시도할 연도: 올해부터 과거로 (직전 연도 우선) */
+function getYearsToTry(): string[] {
+  const current = new Date().getFullYear();
+  const years: string[] = [];
+  for (let y = current; y >= 2022; y--) years.push(String(y));
+  return years;
+}
+
+/**
  * 대학명으로 경쟁률 조회 (schlId 자동 조회 후 호출)
+ * 가능한 최근 연도부터 시도해, 데이터가 있는 직전 연도 결과를 반환합니다.
  */
 export async function getUniversityStatsByName(universityName: string): Promise<{
   universityName: string;
   year: string;
   competitionRate: string;
 } | null> {
-  const schlId = await findSchoolIdByName(universityName);
-  if (!schlId) return null;
+  const apiSchlId = await findSchoolIdByName(universityName);
+  const fallbackSchlId = SCHL_ID_FALLBACK[universityName] ?? null;
 
-  const result = await getFreshmanCompetitionRate(schlId, '2024');
-  if (!result) return null;
+  const idsToTry = [
+    apiSchlId ? normalizeSchlId(apiSchlId) : null,
+    fallbackSchlId,
+  ].filter((id): id is string => !!id && id.length > 0);
+  const uniqueIds = [...new Set(idsToTry)];
+  const yearsToTry = getYearsToTry();
 
-  return {
-    universityName: result.universityName,
-    year: result.year,
-    competitionRate: result.rate,
-  };
+  for (const schlId of uniqueIds) {
+    for (const svyYr of yearsToTry) {
+      const result = await getFreshmanCompetitionRate(schlId, svyYr);
+      if (result) {
+        console.log('[공공데이터] 경쟁률 조회 성공(서비스):', result.universityName, result.year, result.rate, 'schlId:', schlId);
+        return {
+          universityName: result.universityName,
+          year: result.year,
+          competitionRate: result.rate,
+        };
+      }
+    }
+  }
+
+  console.log('[공공데이터] getUniversityStatsByName 실패: 경쟁률 API 결과 없음', universityName, '시도한 schlId:', uniqueIds);
+  return null;
 }

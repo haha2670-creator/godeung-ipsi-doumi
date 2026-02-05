@@ -112,14 +112,21 @@ export const getPublicDataStatus = async (_req: Request, res: Response): Promise
 
 export const getUniversityStatsFromPublic = async (req: Request, res: Response): Promise<void> => {
   try {
-    const name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
+    let name = (Array.isArray(req.params.name) ? req.params.name[0] : req.params.name) as string;
     if (!name) {
       res.status(400).json({ error: '대학명이 필요합니다.' });
       return;
     }
+    try {
+      name = decodeURIComponent(name);
+    } catch {
+      // 이미 디코딩된 경우 무시
+    }
+    console.log('[공공데이터] 경쟁률 조회 요청 대학명:', name);
 
     const stats = await publicDataService.getUniversityStatsByName(name);
     if (!stats) {
+      console.log('[공공데이터] 경쟁률 조회 결과 없음:', name);
       res.status(404).json({
         error: '공공데이터에서 해당 대학 정보를 찾을 수 없습니다.',
         hint: 'DATA_GO_KR_SERVICE_KEY 설정 및 공공데이터포털 이용신청 확인하세요',
@@ -127,8 +134,10 @@ export const getUniversityStatsFromPublic = async (req: Request, res: Response):
       return;
     }
 
+    console.log('[공공데이터] 경쟁률 조회 성공:', name, stats.year, stats.competitionRate);
     res.status(200).json(stats);
   } catch (error) {
+    console.error('[공공데이터] 경쟁률 조회 예외:', error);
     res.status(400).json({ error: (error as Error).message });
   }
 };
