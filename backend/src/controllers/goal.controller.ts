@@ -1,3 +1,4 @@
+
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import * as goalService from '../services/goal.service';
@@ -69,12 +70,13 @@ export const deleteGoal = async (req: AuthRequest, res: Response): Promise<void>
 export const getRoadmap = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({ error: '??? ?????.' });
+      res.status(401).json({ error: '인증이 필요합니다.' });
       return;
     }
 
     const id = (Array.isArray(req.params.id) ? req.params.id[0] : req.params.id) as string;
-    const roadmap = await goalService.generateRoadmap(req.user.userId, id);
+    const useAI = req.query.ai === 'true' || req.query.ai === '1';
+    const roadmap = await goalService.generateRoadmap(req.user.userId, id, useAI);
 
     res.status(200).json(roadmap);
   } catch (error) {

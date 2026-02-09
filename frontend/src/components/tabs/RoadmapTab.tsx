@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { goalsApi } from "@/lib/api";
-import { Map, CheckCircle, Calendar, Lightbulb } from "lucide-react";
+import { Map, CheckCircle, Calendar, Lightbulb, AlertCircle, Info } from "lucide-react";
 
 interface Goal {
   id: string;
@@ -18,6 +18,22 @@ interface KeyDate {
   note?: string;
 }
 
+interface DataSourceInfo {
+  lastUpdated?: string;
+  source?: string;
+  disclaimer?: string;
+  reliability?: {
+    level: string;
+    note: string;
+  };
+  userDataAnalysis?: {
+    hasLowGrades?: boolean;
+    hasFewActivities?: boolean;
+    hasNoClubs?: boolean;
+    recommendation?: string;
+  } | null;
+}
+
 interface Roadmap {
   title: string;
   targetYear?: string;
@@ -27,6 +43,7 @@ interface Roadmap {
     semester: string;
     tasks: string[];
   }[];
+  dataSource?: DataSourceInfo;
 }
 
 export function RoadmapTab() {
@@ -83,11 +100,14 @@ export function RoadmapTab() {
     }
   };
 
-  const loadRoadmap = async (goalId: string) => {
+  const [useAI, setUseAI] = useState(false);
+
+  const loadRoadmap = async (goalId: string, aiMode: boolean = false) => {
     setLoading(true);
     try {
-      const res = await goalsApi.roadmap(goalId);
+      const res = await goalsApi.roadmap(goalId, aiMode);
       setRoadmap(res.data);
+      setUseAI(aiMode);
     } catch (error) {
       console.error("로드맵 로드 실패:", error);
     } finally {
@@ -97,7 +117,7 @@ export function RoadmapTab() {
 
   const handleGoalChange = (goal: Goal) => {
     setSelectedGoal(goal);
-    loadRoadmap(goal.id);
+    loadRoadmap(goal.id, useAI);
   };
 
   if (goals.length === 0) {
@@ -127,7 +147,21 @@ export function RoadmapTab() {
 
       {/* 목표 선택 */}
       <div className="mb-6">
-        <label className="label">목표 대학 선택</label>
+        <div className="flex items-center justify-between mb-3">
+          <label className="label mb-0">목표 대학 선택</label>
+          {selectedGoal && (
+            <button
+              onClick={() => loadRoadmap(selectedGoal.id, !useAI)}
+              className={`text-sm px-3 py-1.5 rounded-lg transition-all ${
+                useAI
+                  ? "bg-purple-100 text-purple-700 hover:bg-purple-200"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {useAI ? "🤖 AI 생성 모드" : "📋 템플릿 모드"}
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           {goals.map((goal) => (
             <button
@@ -161,6 +195,80 @@ export function RoadmapTab() {
               </span>
             )}
           </div>
+
+          {/* 데이터 신뢰성 안내 */}
+          {roadmap.dataSource && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Info size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                    <span>데이터 출처 및 안내</span>
+                    {roadmap.dataSource.reliability && (
+                      <span className="text-xs px-2 py-0.5 bg-blue-200 text-blue-800 rounded-full">
+                        {roadmap.dataSource.reliability.level}
+                      </span>
+                    )}
+                  </h4>
+                  {roadmap.dataSource.source && (
+                    <p className="text-sm text-blue-800 mb-1">
+                      <span className="font-medium">출처:</span> {roadmap.dataSource.source}
+                    </p>
+                  )}
+                  {roadmap.dataSource.lastUpdated && (
+                    <p className="text-xs text-blue-700 mb-2">
+                      마지막 업데이트: {roadmap.dataSource.lastUpdated}
+                    </p>
+                  )}
+                  {roadmap.dataSource.disclaimer && (
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-gray-700 leading-relaxed">
+                          {roadmap.dataSource.disclaimer}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {roadmap.dataSource.reliability?.note && (
+                    <p className="text-xs text-blue-700 mt-2 italic">
+                      {roadmap.dataSource.reliability.note}
+                    </p>
+                  )}
+                  {roadmap.dataSource.userDataAnalysis && (
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-blue-200">
+                      <p className="font-semibold text-blue-900 text-sm mb-2">📊 학생 데이터 분석 결과</p>
+                      <div className="space-y-1 text-xs text-gray-700">
+                        {roadmap.dataSource.userDataAnalysis.hasLowGrades && (
+                          <p className="flex items-center gap-2">
+                            <span className="text-amber-600">⚠️</span>
+                            <span>성적 보완이 필요합니다. 약점 과목 집중 관리가 권장됩니다.</span>
+                          </p>
+                        )}
+                        {roadmap.dataSource.userDataAnalysis.hasFewActivities && (
+                          <p className="flex items-center gap-2">
+                            <span className="text-amber-600">⚠️</span>
+                            <span>비교과 활동이 부족합니다. 다양한 활동 참여가 필요합니다.</span>
+                          </p>
+                        )}
+                        {roadmap.dataSource.userDataAnalysis.hasNoClubs && (
+                          <p className="flex items-center gap-2">
+                            <span className="text-amber-600">⚠️</span>
+                            <span>동아리 활동이 없습니다. 전공 관련 동아리 가입을 권장합니다.</span>
+                          </p>
+                        )}
+                        {roadmap.dataSource.userDataAnalysis.recommendation && (
+                          <p className="mt-2 pt-2 border-t border-blue-100 text-blue-800 font-medium">
+                            💡 권장사항: {roadmap.dataSource.userDataAnalysis.recommendation}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 2028학년도 입시 일정 */}
           {roadmap.keyDates && roadmap.keyDates.length > 0 && (

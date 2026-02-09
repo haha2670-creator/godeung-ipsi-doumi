@@ -92,7 +92,7 @@ export const goalsApi = {
   create: (data: any) => api.post('/goals', data),
   update: (id: string, data: any) => api.put(`/goals/${id}`, data),
   delete: (id: string) => api.delete(`/goals/${id}`),
-  roadmap: (id: string) => api.get(`/goals/${id}/roadmap?t=${Date.now()}`),
+  roadmap: (id: string, useAI: boolean = false) => api.get(`/goals/${id}/roadmap`, { params: { ai: useAI } }),
 };
 
 // Schedules API
